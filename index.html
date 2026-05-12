@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>김 한 주 — 실리카겔 × 김 테마주</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0e14;
+      --panel: rgba(255,255,255,0.025);
+      --border: rgba(255,255,255,0.06);
+      --text: #e8e8e8;
+      --muted: #888;
+      --up: #00ff88;
+      --down: #ff5252;
+      --accent: #00ff88;
+      --apple: #fa233b;
+      --spotify: #1db954;
+      --youtube: #ff0033;
+    }
+    body.mode-gold { --accent: #ffd166; }
+
+    html, body { height: 100%; }
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.4s ease;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(circle at 15% 30%, rgba(0, 255, 136, 0.07), transparent 50%),
+        radial-gradient(circle at 85% 70%, rgba(0, 150, 255, 0.06), transparent 50%);
+      pointer-events: none; z-index: 0;
+      transition: opacity 0.5s;
+    }
+    body.mode-gold::before {
+      background:
+        radial-gradient(circle at 15% 30%, rgba(255, 209, 102, 0.10), transparent 50%),
+        radial-gradient(circle at 85% 70%, rgba(255, 150, 50, 0.06), transparent 50%);
+    }
+
+    /* Ticker */
+    .ticker-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(10, 14, 20, 0.92);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0; overflow: hidden; z-index: 100;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+    }
+    .ticker-track {
+      display: flex; gap: 48px;
+      animation: scroll 50s linear infinite;
+      white-space: nowrap; width: max-content;
+    }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .ticker-item { display: inline-flex; gap: 10px; align-items: baseline; }
+    .ticker-symbol { color: var(--muted); }
+    .ticker-price  { color: #fff; font-weight: 700; }
+    .ticker-up     { color: #00ff88; }
+    .ticker-down   { color: var(--down); }
+
+    /* Layout */
+    .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* Hero */
+    header.hero { margin-top: 80px; text-align: center; padding: 60px 0 50px; }
+    .brand {
+      font-size: 12px; letter-spacing: 0.35em; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+
+    .mode-toggle {
+      display: inline-flex; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 4px; margin-bottom: 24px; gap: 2px; vertical-align: middle;
+    }
+    .mode-toggle button {
+      background: none; border: none; padding: 9px 20px; color: #888;
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      border-radius: 999px; cursor: pointer; transition: all 0.25s ease;
+      letter-spacing: 0.02em;
+    }
+    .mode-toggle button.active { background: var(--accent); color: #0a0e14; }
+    .mode-toggle button:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.04); }
+
+    .picker-wrap {
+      display: inline-flex; align-items: center; gap: 12px;
+      margin-bottom: 18px; flex-wrap: wrap; justify-content: center;
+    }
+    .picker-prefix, .picker-suffix { font-size: 17px; color: #888; font-weight: 400; }
+    .picker-suffix { color: #aaa; }
+
+    .stock-picker {
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+      border-radius: 999px; padding: 12px 52px 12px 24px;
+      font-family: inherit; font-size: 17px; font-weight: 600;
+      color: #fff; cursor: pointer; transition: all 0.2s;
+      background-repeat: no-repeat; background-position: right 20px center; background-size: 14px;
+      max-width: 100%;
+    }
+    body:not(.mode-gold) .stock-picker {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300ff88' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+    body.mode-gold .stock-picker {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffd166' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+    .stock-picker:hover {
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+      background-color: color-mix(in srgb, var(--accent) 6%, transparent);
+    }
+    .stock-picker:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+    .stock-picker option { background: #0a0e14; color: #fff; padding: 8px; }
+
+    h1.title {
+      font-size: clamp(72px, 14vw, 192px); font-weight: 900;
+      letter-spacing: -0.05em; line-height: 0.88;
+      background: linear-gradient(135deg, #00ff88 0%, #00d4ff 50%, #b0ff8a 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 24px; display: inline-block;
+      transition: filter 0.4s;
+    }
+    body.mode-gold h1.title {
+      background: linear-gradient(135deg, #ffd166 0%, #ffba08 50%, #ffe7a3 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .title-space { display: inline-block; width: 0.25em; }
+
+    .hero-price-row {
+      display: inline-flex; align-items: baseline; gap: 14px;
+      margin-bottom: 20px; padding: 14px 28px;
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+      border-radius: 999px; font-family: 'JetBrains Mono', monospace;
+      transition: border-color 0.25s;
+    }
+    .hero-price-row.flash { animation: pricePulse 0.55s ease; }
+    @keyframes pricePulse {
+      0%   { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+      40%  { transform: scale(1.045); box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+      100% { transform: scale(1); }
+    }
+    #hero-price { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    .hero-equals { color: var(--muted); font-size: 20px; font-weight: 300; }
+    .hero-change { font-size: 14px; font-weight: 600; }
+    .up   { color: #00ff88; }
+    .down { color: var(--down); }
+
+    .hero-chart-wrap { max-width: 600px; margin: 0 auto 16px; }
+    .hero-chart { height: 120px; color: var(--accent); transition: color 0.4s; }
+    .hero-chart svg { width: 100%; height: 100%; display: block; }
+    .hero-chart-meta {
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: #555; letter-spacing: 0.1em;
+      margin-top: 4px; padding: 0 4px;
+    }
+
+    /* Vibe quote */
+    .vibe-quote {
+      max-width: 600px; margin: 4px auto 8px;
+      padding: 14px 24px; text-align: center;
+    }
+    .vibe-quote.refresh { animation: vibeIn 0.55s ease both; }
+    @keyframes vibeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .vibe-quote-text { font-size: 16px; font-style: italic; color: #d0d0d0; line-height: 1.6; }
+    .vibe-quote-source {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: #666; margin-top: 10px; letter-spacing: 0.1em;
+      display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+    }
+    .vibe-quote-source span.song-cite { color: var(--accent); }
+    .vibe-plats { display: inline-flex; gap: 6px; }
+    .plat-mini {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 7px;
+      background: rgba(255,255,255,0.04); color: #888;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .plat-mini svg { width: 12px; height: 12px; }
+    .plat-mini.apple:hover   { color: #fff; background: var(--apple); }
+    .plat-mini.spotify:hover { color: #fff; background: var(--spotify); }
+    .plat-mini.youtube:hover { color: #fff; background: var(--youtube); }
+
+    .vibe-empty {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 999px;
+      font-style: normal; font-size: 13px; color: #888;
+    }
+    .vibe-empty-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; background: var(--accent); color: #0a0e14;
+      padding: 3px 9px; border-radius: 999px; font-weight: 700;
+      letter-spacing: 0.12em; transition: background-color 0.4s;
+    }
+    .vibe-empty code {
+      font-size: 11px; color: #aaa;
+      background: rgba(255,255,255,0.04);
+      padding: 2px 6px; border-radius: 4px;
+    }
+
+    .tagline {
+      font-size: 15px; color: #aaa; max-width: 540px;
+      margin: 20px auto 0; line-height: 1.7;
+    }
+    .tagline strong { color: var(--accent); font-weight: 500; transition: color 0.4s; }
+
+    /* Main grid */
+    .main-grid {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      gap: 56px; margin-top: 40px; align-items: start;
+    }
+    @media (max-width: 920px) {
+      .main-grid { grid-template-columns: 1fr; gap: 40px; }
+      .artist-panel { position: static !important; }
+    }
+    .artist-panel { position: sticky; top: 100px; }
+
+    .artist-photo {
+      width: 100%; aspect-ratio: 1;
+      background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+      border-radius: 24px; overflow: hidden; position: relative;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .artist-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-placeholder { text-align: center; color: #4a5568; padding: 40px; }
+    .photo-placeholder svg { width: 96px; height: 96px; margin-bottom: 20px; opacity: 0.4; }
+    .photo-placeholder code {
+      display: inline-block; margin-top: 12px; padding: 4px 10px;
+      background: rgba(255,255,255,0.05); border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a0a0a0;
+    }
+
+    .artist-info {
+      margin-top: 20px; padding: 24px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    }
+    .artist-name { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .artist-role { color: var(--muted); font-size: 13px; margin-bottom: 14px; letter-spacing: 0.05em; }
+    .artist-bio  { color: #aaa; font-size: 14px; line-height: 1.65; }
+
+    /* Stocks */
+    .stocks-panel h2 {
+      font-size: 12px; letter-spacing: 0.3em; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 8px; font-weight: 500;
+    }
+    .stocks-panel .h2-sub { font-size: 13px; color: #666; margin-bottom: 24px; }
+
+    .stock-card {
+      display: grid; grid-template-columns: minmax(0,1fr) 96px auto;
+      gap: 18px; padding: 22px 26px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 12px;
+      transition: all 0.25s ease; align-items: center;
+      cursor: pointer; text-decoration: none; color: inherit;
+      position: relative;
+    }
+    @media (max-width: 520px) {
+      .stock-card { grid-template-columns: minmax(0,1fr) auto; }
+      .stock-spark { display: none; }
+    }
+    .stock-card:hover {
+      background: rgba(255,255,255,0.045);
+      border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+      transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .stock-card.selected {
+      background: color-mix(in srgb, var(--accent) 5%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent) inset, 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .stock-card.selected::before {
+      content: 'PICKED'; position: absolute; top: -9px; left: 22px;
+      background: var(--accent); color: #0a0e14;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+      padding: 3px 10px; border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stock-info { min-width: 0; }
+    .stock-name { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px; }
+    .stock-meta {
+      display: flex; gap: 10px; font-size: 12px; color: #666;
+      font-family: 'JetBrains Mono', monospace; align-items: center; flex-wrap: wrap;
+    }
+    .stock-meta .dot { opacity: 0.4; }
+
+    .stock-spark { height: 36px; opacity: 0.7; transition: opacity 0.2s; }
+    .stock-card:hover .stock-spark,
+    .stock-card.selected .stock-spark { opacity: 1; }
+    .stock-spark.up   { color: #00ff88; }
+    .stock-spark.down { color: var(--down); }
+    .stock-spark svg  { width: 100%; height: 100%; display: block; }
+
+    .stock-price { text-align: right; white-space: nowrap; }
+    .stock-amount {
+      font-family: 'JetBrains Mono', monospace; font-size: 22px;
+      font-weight: 700; color: #fff; letter-spacing: -0.01em;
+    }
+    .stock-amount .per { color: var(--muted); font-size: 12px; font-weight: 400; margin-left: 4px; }
+    .stock-change {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      margin-top: 4px; font-weight: 500;
+    }
+
+    /* Soundtrack section */
+    .soundtrack { margin-top: 100px; }
+    .section-header { text-align: center; margin-bottom: 40px; }
+    .section-header h2 {
+      font-size: 12px; letter-spacing: 0.35em; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .section-header .section-sub { font-size: 13px; color: #666; }
+
+    .vibe-groups { display: flex; flex-direction: column; gap: 40px; }
+    .vibe-group-title {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 15px; font-weight: 600; color: #ccc;
+      margin-bottom: 16px;
+    }
+    .mood-chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      font-weight: 700; padding: 4px 10px; border-radius: 999px;
+      letter-spacing: 0.15em;
+    }
+    .mood-chip.up      { background: rgba(0,255,136,0.13);   color: #00ff88; }
+    .mood-chip.neutral { background: rgba(255,255,255,0.08); color: #aaa; }
+    .mood-chip.down    { background: rgba(255,82,82,0.15);   color: #ff5252; }
+
+    .song-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .song-card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      transition: all 0.25s ease;
+    }
+    .song-card:hover {
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+    }
+    .song-art {
+      aspect-ratio: 1; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .song-art img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .song-art-glyph {
+      font-size: 88px; color: rgba(255,255,255,0.25);
+      font-weight: 300; line-height: 1; user-select: none;
+    }
+    .song-card-body { padding: 18px 18px 20px; }
+    .song-title {
+      font-size: 17px; font-weight: 700;
+      letter-spacing: -0.01em; margin-bottom: 2px;
+    }
+    .song-artist { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+    .song-links { display: flex; gap: 6px; }
+    .plat-btn {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; height: 34px; border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #aaa; font-size: 11px; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;
+    }
+    .plat-btn svg { width: 13px; height: 13px; }
+    .plat-btn:hover { transform: translateY(-1px); }
+    .plat-btn.apple:hover   { background: var(--apple);   color: #fff; border-color: var(--apple); }
+    .plat-btn.spotify:hover { background: var(--spotify); color: #fff; border-color: var(--spotify); }
+    .plat-btn.youtube:hover { background: var(--youtube); color: #fff; border-color: var(--youtube); }
+
+    footer {
+      margin-top: 80px; padding: 32px 0; text-align: center;
+      color: #555; font-size: 12px;
+      border-top: 1px solid var(--border); line-height: 1.8;
+    }
+    footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dashed #333; }
+    footer a:hover { color: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <div class="ticker-bar">
+    <div class="ticker-track" id="ticker"></div>
+  </div>
+
+  <main class="container">
+
+    <header class="hero">
+      <div class="brand">SILICA GEL × <span id="brand-mode">SEAWEED</span> STOCKS · 2026</div>
+
+      <div class="mode-toggle" role="tablist" aria-label="김 의미 선택">
+        <button type="button" data-mode="seaweed" class="active">김 (海苔)</button>
+        <button type="button" data-mode="gold">김 (金)</button>
+      </div>
+
+      <div class="picker-wrap">
+        <span class="picker-prefix">오늘의</span>
+        <select id="stock-picker" class="stock-picker" aria-label="종목 선택"></select>
+        <span class="picker-suffix">의</span>
+      </div>
+
+      <h1 class="title">김<span class="title-space"></span>한<span class="title-space"></span>주</h1>
+
+      <div class="hero-price-row" id="hero-price-row">
+        <span class="hero-equals">=</span>
+        <span id="hero-price">₩20,500</span>
+        <span id="hero-change" class="hero-change up">▲ +2.34%</span>
+      </div>
+
+      <div class="hero-chart-wrap">
+        <div class="hero-chart" id="hero-chart"></div>
+        <div class="hero-chart-meta">
+          <span>최근 30일</span>
+          <span id="hero-chart-range">— —</span>
+        </div>
+      </div>
+
+      <div class="vibe-quote" id="vibe-quote">
+        <div class="vibe-quote-text" id="vibe-quote-text"></div>
+        <div class="vibe-quote-source" id="vibe-quote-source"></div>
+      </div>
+
+      <p class="tagline">
+        사람 <strong>김한주</strong>의 값은 매길 수 없습니다.<br>
+        <strong>김(<span id="tagline-mode">海苔</span>) 한 주</strong>의 값만, 매일 매겨봅니다.
+      </p>
+    </header>
+
+    <div class="main-grid">
+      <section class="artist-panel">
+        <div class="artist-photo">
+          <img src="kim-hanju.jpg" alt="실리카겔 김한주"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="photo-placeholder" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <div>여기에 김한주 사진이 표시됩니다</div>
+            <code>kim-hanju.jpg</code>
+            <div style="margin-top:8px; font-size:11px;">파일을 같은 폴더에 두면 자동으로 로드돼요</div>
+          </div>
+        </div>
+        <div class="artist-info">
+          <div class="artist-name">김한주 <span style="color:var(--muted); font-size:14px; font-weight:400;">Kim Hanju</span></div>
+          <div class="artist-role">실리카겔 · SILICA GEL</div>
+          <p class="artist-bio">
+            한국 인디씬의 새로운 흐름을 만들어가는 4인조 밴드 실리카겔의 멤버.
+            "Kyo181", "No Pain", "Tik Tak Tok" 등으로 잘 알려져 있다.
+          </p>
+        </div>
+      </section>
+
+      <section class="stocks-panel">
+        <h2 id="stocks-heading">김(海苔) 테마주 · 1주 가격</h2>
+        <div class="h2-sub">2026년 5월 · 예시 시세 (실시간 아님) · 카드를 누르면 위 차트가 바뀝니다</div>
+        <div id="stock-list"></div>
+      </section>
+    </div>
+
+    <!-- 사운드트랙 섹션 -->
+    <section class="soundtrack">
+      <div class="section-header">
+        <h2>SOUNDTRACK</h2>
+        <div class="section-sub">실리카겔 — 분위기별 풀 (시세에 따라 위 인용문이 여기서 뽑힙니다)</div>
+      </div>
+      <div class="vibe-groups" id="vibe-groups"></div>
+    </section>
+
+    <footer>
+      예시 데이터입니다. 실시간 시세는
+      <a href="https://finance.naver.com" target="_blank" rel="noopener">네이버 증권</a>에서 확인하세요.<br>
+      앨범아트는 <code>art/&lt;곡-슬러그&gt;.jpg</code> 파일을 폴더에 두면 자동 로드.<br>
+      © 2026 · 김 한 주 프로젝트 · made with 🌿
+    </footer>
+  </main>
+
+  <script>
+    /* === 모드별 시세 데이터 === */
+    const modes = {
+      seaweed: {
+        brandLabel: 'SEAWEED',
+        taglineKanji: '海苔',
+        headingLabel: '김(海苔) 테마주 · 1주 가격',
+        stocks: [
+          { name: '사조씨푸드',  code: '014710', market: 'KOSPI', price: 20500, change:  2.34, note: '김 대장주' },
+          { name: 'CJ씨푸드',    code: '011150', market: 'KOSPI', price:  5820, change:  1.82, note: '수출 호조' },
+          { name: '동원F&B',     code: '049770', market: 'KOSPI', price: 52100, change: -0.48, note: '조미김 강자' },
+          { name: '한성기업',    code: '003680', market: 'KOSPI', price:  5150, change:  3.12, note: '광천김 브랜드' },
+          { name: '사조대림',    code: '003960', market: 'KOSPI', price: 51300, change:  2.05, note: '냉동김밥' },
+          { name: '사조오양',    code: '006090', market: 'KOSPI', price:  9820, change:  0.81, note: '가공식품' },
+        ]
+      },
+      gold: {
+        brandLabel: 'GOLD',
+        taglineKanji: '金',
+        headingLabel: '김(金) 관련주 · 1주 가격',
+        stocks: [
+          { name: '고려아연',         code: '010130', market: 'KOSPI', price: 548000, change:  1.45, note: '금 정련 대장주' },
+          { name: '풍산',             code: '103140', market: 'KOSPI', price:  62300, change:  2.10, note: '비철금속' },
+          { name: 'LS',               code: '006260', market: 'KOSPI', price: 132500, change: -0.32, note: '자원개발' },
+          { name: 'ACE KRX금현물',    code: '411060', market: 'KOSPI', price:  13420, change:  0.82, note: '금 실물 ETF' },
+          { name: 'KODEX 골드선물(H)',code: '132030', market: 'KOSPI', price:  16280, change:  0.91, note: '금 선물 ETF' },
+          { name: 'TIGER 골드선물(H)',code: '319640', market: 'KOSPI', price:  17850, change:  0.88, note: '금 선물 ETF' },
+        ]
+      }
+    };
+
+    /* === 분위기별 인용 풀 ===
+       text 에 좋아하는 가사 한 줄을 직접 채워주세요. */
+    const vibeQuotes = {
+      up: {
+        label: '상승',
+        title: '오를 때 들을 한 곡',
+        threshold:  1.5,
+        quotes: [
+          { song: 'Tik Tak Tok',  text: '' },
+          { song: 'Desert Eagle', text: '' },
+          { song: 'Kyo181',       text: '' },
+        ]
+      },
+      neutral: {
+        label: '횡보',
+        title: '그냥 그럴 때 들을 한 곡',
+        quotes: [
+          { song: 'Andromeda', text: '' },
+          { song: 'Bear',      text: '' },
+          { song: 'Realize',   text: '' },
+        ]
+      },
+      down: {
+        label: '하락',
+        title: '안 좋을 때 들을 한 곡',
+        threshold: -0.5,
+        quotes: [
+          { song: 'No Pain',   text: '' },
+          { song: 'Mercurial', text: '' },
+          { song: '백야',       text: '' },
+        ]
+      },
+    };
+
+    let currentMode = 'seaweed';
+
+    const fmt  = n => '₩' + n.toLocaleString('ko-KR');
+    const pct  = n => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+    const fmt0 = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+
+    /* === 히스토리 (시드 기반) === */
+    const historyCache = {};
+    function genHistory(s, points = 30) {
+      if (historyCache[s.code]) return historyCache[s.code];
+      let seed = 0;
+      for (const c of s.code) seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+      const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+      const end = s.price;
+      const drift = s.change / 100;
+      const start = end / (1 + drift * (1.5 + rand() * 3));
+      const hist = [];
+      for (let i = 0; i < points - 1; i++) {
+        const t = i / (points - 1);
+        const trend = start + (end - start) * t;
+        const noise = (rand() - 0.5) * end * 0.028;
+        hist.push(Math.max(trend + noise, end * 0.55));
+      }
+      hist.push(end);
+      historyCache[s.code] = hist;
+      return hist;
+    }
+
+    function sparklineSVG(data, w, h) {
+      const min = Math.min(...data), max = Math.max(...data);
+      const range = max - min || 1, pad = 2, iw = w - pad*2, ih = h - pad*2;
+      const pts = data.map((v, i) => {
+        const x = pad + (i / (data.length - 1)) * iw;
+        const y = pad + ih - ((v - min) / range) * ih;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <polyline fill="none" stroke="currentColor" stroke-width="1.6"
+                  stroke-linejoin="round" stroke-linecap="round"
+                  vector-effect="non-scaling-stroke" points="${pts}"/>
+      </svg>`;
+    }
+
+    function areaChartSVG(data, w, h) {
+      const min = Math.min(...data), max = Math.max(...data);
+      const range = max - min || 1, pad = 6, iw = w - pad*2, ih = h - pad*2;
+      const pts = data.map((v, i) => {
+        const x = pad + (i / (data.length - 1)) * iw;
+        const y = pad + ih - ((v - min) / range) * ih;
+        return [x, y];
+      });
+      const lineD = 'M ' + pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' L ');
+      const last = pts[pts.length - 1], first = pts[0];
+      const areaD = lineD + ` L ${last[0].toFixed(1)},${h - pad} L ${first[0].toFixed(1)},${h - pad} Z`;
+      return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="heroGrad" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="currentColor" stop-opacity="0.38"/>
+            <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaD}" fill="url(#heroGrad)"/>
+        <path d="${lineD}" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linejoin="round" stroke-linecap="round"
+              vector-effect="non-scaling-stroke"/>
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="4" fill="currentColor"/>
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="9" fill="currentColor" opacity="0.25"/>
+      </svg>`;
+    }
+
+    /* === 플랫폼 링크 === */
+    function platformLinks(song, artist = '실리카겔') {
+      const q = encodeURIComponent(`${artist} ${song}`);
+      return {
+        apple:   `https://music.apple.com/kr/search?term=${q}`,
+        spotify: `https://open.spotify.com/search/${q}`,
+        youtube: `https://www.youtube.com/results?search_query=${q}`,
+      };
+    }
+
+    /* === 곡명 → 파일명 슬러그 === */
+    function songSlug(s) {
+      return s.toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/[^\w\-가-힣]/g, '');
+    }
+
+    /* === 곡명 해시 기반 그라데이션 (앨범아트 fallback) === */
+    function songHue(s) {
+      let h = 0;
+      for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+      return h % 360;
+    }
+    function songGradient(song) {
+      const h1 = songHue(song);
+      const h2 = (h1 + 50) % 360;
+      return `linear-gradient(135deg, hsl(${h1}, 55%, 28%), hsl(${h2}, 65%, 42%))`;
+    }
+
+    /* === 플랫폼 아이콘 (제너릭 SVG) === */
+    const icons = {
+      apple: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="18" cy="16" r="3" fill="currentColor"/></svg>`,
+      spotify: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M7 14c3-1.2 7-1 10 1"/><path d="M7 11c4-1.3 9-1 12 1"/><path d="M7 8c5-1.2 11-.7 13 1"/></svg>`,
+      youtube: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6" width="20" height="12" rx="3"/><polygon points="10,9.5 16,12 10,14.5" fill="#0a0e14"/></svg>`,
+    };
+
+    /* === 인용 분위기 선택 === */
+    function pickVibe(change) {
+      let key;
+      if (change >= vibeQuotes.up.threshold)        key = 'up';
+      else if (change <= vibeQuotes.down.threshold) key = 'down';
+      else                                          key = 'neutral';
+      const bucket = vibeQuotes[key];
+      const filled = bucket.quotes.filter(q => q.text && q.text.trim());
+      if (filled.length === 0) {
+        const ph = bucket.quotes[Math.floor(Math.random() * bucket.quotes.length)];
+        return { empty: true, song: ph.song, label: bucket.label, key };
+      }
+      const q = filled[Math.floor(Math.random() * filled.length)];
+      return { empty: false, ...q, label: bucket.label, key };
+    }
+
+    /* === DOM refs === */
+    const picker      = document.getElementById('stock-picker');
+    const heroPrice   = document.getElementById('hero-price');
+    const heroChange  = document.getElementById('hero-change');
+    const heroRow     = document.getElementById('hero-price-row');
+    const heroChart   = document.getElementById('hero-chart');
+    const heroRange   = document.getElementById('hero-chart-range');
+    const stockList   = document.getElementById('stock-list');
+    const ticker      = document.getElementById('ticker');
+    const brandMode   = document.getElementById('brand-mode');
+    const taglineMode = document.getElementById('tagline-mode');
+    const stocksHd    = document.getElementById('stocks-heading');
+    const vibeBox     = document.getElementById('vibe-quote');
+    const vibeText    = document.getElementById('vibe-quote-text');
+    const vibeSource  = document.getElementById('vibe-quote-source');
+    const vibeGroups  = document.getElementById('vibe-groups');
+
+    function platMiniHTML(song) {
+      const l = platformLinks(song);
+      return `<span class="vibe-plats">
+        <a href="${l.apple}"   target="_blank" rel="noopener" class="plat-mini apple"   title="Apple Music">${icons.apple}</a>
+        <a href="${l.spotify}" target="_blank" rel="noopener" class="plat-mini spotify" title="Spotify">${icons.spotify}</a>
+        <a href="${l.youtube}" target="_blank" rel="noopener" class="plat-mini youtube" title="YouTube">${icons.youtube}</a>
+      </span>`;
+    }
+
+    function renderVibe(change) {
+      const v = pickVibe(change);
+      if (v.empty) {
+        vibeText.innerHTML = `
+          <span class="vibe-empty">
+            <span class="vibe-empty-tag">${v.label}</span>
+            〈${v.song}〉의 한 줄을 채워주세요
+            <code>vibeQuotes.${v.key}</code>
+          </span>`;
+        vibeSource.innerHTML = `— 실리카겔 <span class="song-cite">〈${v.song}〉</span> ${platMiniHTML(v.song)}`;
+      } else {
+        vibeText.textContent = `“${v.text}”`;
+        vibeSource.innerHTML = `— 실리카겔 <span class="song-cite">〈${v.song}〉</span> ${platMiniHTML(v.song)}`;
+      }
+      vibeBox.classList.remove('refresh');
+      void vibeBox.offsetWidth;
+      vibeBox.classList.add('refresh');
+    }
+
+    function songCardHTML(song) {
+      const l = platformLinks(song);
+      const slug = songSlug(song);
+      return `
+        <div class="song-card">
+          <div class="song-art" style="background: ${songGradient(song)}">
+            <img src="art/${slug}.jpg" alt="" onerror="this.remove()">
+            <span class="song-art-glyph">♪</span>
+          </div>
+          <div class="song-card-body">
+            <div class="song-title">${song}</div>
+            <div class="song-artist">실리카겔 · Silica Gel</div>
+            <div class="song-links">
+              <a class="plat-btn apple"   href="${l.apple}"   target="_blank" rel="noopener" title="Apple Music">${icons.apple} Apple</a>
+              <a class="plat-btn spotify" href="${l.spotify}" target="_blank" rel="noopener" title="Spotify">${icons.spotify} Spotify</a>
+              <a class="plat-btn youtube" href="${l.youtube}" target="_blank" rel="noopener" title="YouTube">${icons.youtube} YouTube</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSoundtrack() {
+      vibeGroups.innerHTML = ['up', 'neutral', 'down'].map(key => {
+        const b = vibeQuotes[key];
+        return `
+          <div class="vibe-group" data-mood="${key}">
+            <h3 class="vibe-group-title">
+              <span class="mood-chip ${key}">${b.label}</span>
+              ${b.title}
+            </h3>
+            <div class="song-grid">
+              ${b.quotes.map(q => songCardHTML(q.song)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectStock(idx) {
+      const stocks = modes[currentMode].stocks;
+      const s = stocks[idx];
+
+      heroPrice.textContent  = fmt(s.price);
+      heroChange.textContent = (s.change >= 0 ? '▲ ' : '▼ ') + pct(s.change);
+      heroChange.className   = 'hero-change ' + (s.change >= 0 ? 'up' : 'down');
+
+      heroRow.classList.remove('flash'); void heroRow.offsetWidth; heroRow.classList.add('flash');
+
+      const hist = genHistory(s);
+      heroChart.innerHTML = areaChartSVG(hist, 600, 120);
+      heroRange.textContent = `LOW ${fmt0(Math.min(...hist))} · HIGH ${fmt0(Math.max(...hist))}`;
+
+      document.querySelectorAll('.stock-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === idx);
+      });
+
+      renderVibe(s.change);
+      picker.value = idx;
+    }
+
+    function renderMode() {
+      const m = modes[currentMode];
+      const stocks = m.stocks;
+
+      brandMode.textContent   = m.brandLabel;
+      taglineMode.textContent = m.taglineKanji;
+      stocksHd.textContent    = m.headingLabel;
+
+      stockList.innerHTML = stocks.map((s, i) => {
+        const hist = genHistory(s);
+        return `
+          <a class="stock-card" data-idx="${i}" href="https://finance.naver.com/item/main.naver?code=${s.code}" target="_blank" rel="noopener">
+            <div class="stock-info">
+              <div class="stock-name">${s.name}</div>
+              <div class="stock-meta">
+                <span>${s.code}</span><span class="dot">·</span>
+                <span>${s.market}</span><span class="dot">·</span>
+                <span>${s.note}</span>
+              </div>
+            </div>
+            <div class="stock-spark ${s.change >= 0 ? 'up' : 'down'}">${sparklineSVG(hist, 96, 36)}</div>
+            <div class="stock-price">
+              <div class="stock-amount">${fmt(s.price)}<span class="per"> / 1주</span></div>
+              <div class="stock-change ${s.change >= 0 ? 'up' : 'down'}">${s.change >= 0 ? '▲' : '▼'} ${pct(s.change)}</div>
+            </div>
+          </a>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.stock-card').forEach(card => {
+        card.addEventListener('click', e => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+          e.preventDefault();
+          selectStock(parseInt(card.dataset.idx));
+        });
+      });
+
+      const tickerHTML = stocks.map(s => `
+        <span class="ticker-item">
+          <span class="ticker-symbol">${s.name}</span>
+          <span class="ticker-price">${fmt(s.price)}</span>
+          <span class="${s.change >= 0 ? 'ticker-up' : 'ticker-down'}">${pct(s.change)}</span>
+        </span>
+      `).join('');
+      ticker.innerHTML = tickerHTML + tickerHTML;
+
+      picker.innerHTML = stocks.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+
+      const featuredIdx = stocks.findIndex(s => s.note.includes('대장'));
+      selectStock(featuredIdx >= 0 ? featuredIdx : 0);
+    }
+
+    picker.addEventListener('change', () => selectStock(parseInt(picker.value)));
+
+    document.querySelectorAll('.mode-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
+        document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        document.body.classList.toggle('mode-gold', currentMode === 'gold');
+        renderMode();
+      });
+    });
+
+    /* 초기 렌더 */
+    renderSoundtrack();
+    renderMode();
+  </script>
+</body>
+</html>
