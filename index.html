@@ -339,16 +339,48 @@
     }
     .section-tip strong { color: var(--accent); font-weight: 600; }
 
-    .vibe-groups { display: flex; flex-direction: column; gap: 40px; }
-    .vibe-group-title {
+    .vibe-groups { display: flex; flex-direction: column; gap: 14px; }
+
+    /* Collapsible mood groups */
+    details.vibe-group {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    details.vibe-group[open] { border-color: rgba(255,255,255,0.1); }
+    details.vibe-group > summary {
+      cursor: pointer;
+      padding: 18px 22px;
+      user-select: none;
+      list-style: none;
       display: flex; align-items: center; gap: 12px;
       font-size: 15px; font-weight: 600; color: #ccc;
-      margin-bottom: 16px;
+      transition: background 0.2s;
     }
-    .vibe-group-title .count {
+    details.vibe-group > summary::-webkit-details-marker { display: none; }
+    details.vibe-group > summary:hover { background: rgba(255,255,255,0.03); }
+    details.vibe-group > summary .vibe-group-name { flex: 1; }
+    details.vibe-group > summary .count {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px; color: #555;
-      margin-left: auto;
+    }
+    details.vibe-group > summary::after {
+      content: '';
+      width: 9px; height: 9px;
+      border-right: 2px solid #888;
+      border-bottom: 2px solid #888;
+      transform: rotate(45deg) translate(-2px, -2px);
+      transition: transform 0.25s;
+      margin-left: 4px;
+    }
+    details.vibe-group[open] > summary::after {
+      transform: rotate(-135deg) translate(-2px, -2px);
+    }
+    details.vibe-group .vibe-group-body {
+      padding: 4px 18px 20px;
+      border-top: 1px solid var(--border);
     }
     .mood-chip {
       font-family: 'JetBrains Mono', monospace; font-size: 10px;
@@ -669,9 +701,9 @@
         <h2>SOUNDTRACK</h2>
         <div class="section-sub">실리카겔 전곡 — 상황에 따라 분위기를 자유롭게 설정</div>
         <div class="section-tip">
-          🎚️ 각 곡 카드 하단 버튼으로 <strong>분위기를 직접 분류</strong>할 수 있어요 (상승 / 횡보 / 하락 / 숨김).
-          시세에 따라 그 분위기 곡들 중 한 곡이 위쪽 인용문에 뽑힙니다.
-          메모와 분류 모두 <strong>이 브라우저에만 저장</strong>돼요.
+          🎚️ <strong>그룹 헤더를 눌러 펼치고</strong>, 곡 카드 하단 버튼으로 상승 / 횡보 / 하락 / 숨김을 자유롭게 설정하세요.
+          시세에 따라 해당 분위기 곡 중 한 곡이 위쪽 인용문에 자동으로 뽑힙니다.
+          메모와 분류 모두 이 브라우저에만 저장돼요.
         </div>
       </div>
       <div class="vibe-groups" id="vibe-groups"></div>
@@ -777,6 +809,7 @@
 
     let currentMode = 'seaweed';
     let lastChange  = 0;
+    let openGroups  = new Set();  // 펼쳐진 분위기 그룹 (collapsible 상태)
 
     const fmt  = n => '₩' + n.toLocaleString('ko-KR');
     const pct  = n => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
@@ -1061,38 +1094,61 @@
         else if (groupedItems[m]) groupedItems[m].push(item);
       }
 
-      let html = groups.map(key => {
-        const b = vibeQuotes[key];
-        const items = groupedItems[key];
+      const renderGroup = (key, label, title, chip, items) => {
+        const isOpen = openGroups.has(key);
         const grid = items.length
           ? `<div class="song-grid">${items.map(songCardHTML).join('')}</div>`
           : `<div class="vibe-group-empty">이 분위기에 배정된 곡이 없어요. 아래에서 곡을 옮겨오세요.</div>`;
         return `
-          <div class="vibe-group" data-mood="${key}">
-            <h3 class="vibe-group-title">
-              <span class="mood-chip ${key}">${b.label}</span>
-              ${b.title}
+          <details class="vibe-group" data-mood="${key}"${isOpen ? ' open' : ''}>
+            <summary>
+              <span class="mood-chip ${chip}">${label}</span>
+              <span class="vibe-group-name">${title}</span>
               <span class="count">${items.length}곡</span>
-            </h3>
-            ${grid}
-          </div>`;
+            </summary>
+            <div class="vibe-group-body">${grid}</div>
+          </details>`;
+      };
+
+      let html = groups.map(key => {
+        const b = vibeQuotes[key];
+        return renderGroup(key, b.label, b.title, key, groupedItems[key]);
       }).join('');
 
       if (off.length) {
-        html += `
-          <div class="vibe-group" data-mood="off">
-            <h3 class="vibe-group-title">
-              <span class="mood-chip off">숨김</span>
-              인용문 풀에서 제외된 곡
-              <span class="count">${off.length}곡</span>
-            </h3>
-            <div class="song-grid">${off.map(songCardHTML).join('')}</div>
-          </div>`;
+        html += renderGroup('off', '숨김', '인용문 풀에서 제외된 곡', 'off', off);
       }
 
       vibeGroups.innerHTML = html;
+
+      /* 펼치기/접기 상태를 openGroups 에 동기화 */
+      document.querySelectorAll('details.vibe-group').forEach(el => {
+        el.addEventListener('toggle', () => {
+          const mood = el.dataset.mood;
+          if (el.open) openGroups.add(mood);
+          else openGroups.delete(mood);
+        });
+      });
+
       attachCardHandlers();
     }
+
+    /* 위쪽 vibe-empty-link (#sound-XXX) 클릭 시 해당 곡이 든 그룹을 자동으로 펼침 */
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href^="#sound-"]');
+      if (!a) return;
+      const sel = a.getAttribute('href');
+      requestAnimationFrame(() => {
+        const target = document.querySelector(sel);
+        if (!target) return;
+        const details = target.closest('details.vibe-group');
+        if (details && !details.open) {
+          details.open = true;
+          openGroups.add(details.dataset.mood);
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
 
     function attachCardHandlers() {
       /* 메모 저장 */
@@ -1128,6 +1184,10 @@
           const mood = btn.dataset.moodValue;
           if (getSongMood(song) === mood) return;
           setSongMood(song, mood);
+          /* 출발지·목적지 그룹 모두 펼친 상태로 유지 */
+          const fromMood = btn.closest('details.vibe-group')?.dataset.mood;
+          if (fromMood) openGroups.add(fromMood);
+          openGroups.add(mood);
           vibeQuotes = buildVibeQuotes();
           renderSoundtrack();   // 카드가 다른 그룹으로 이동
           renderVibe(lastChange);
